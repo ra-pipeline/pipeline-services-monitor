@@ -1,0 +1,30 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+.venv/
+.pixi/
+
+# Testing & Coverage
+.pytest_cache/
+.coverage
+htmlcov/
+test-results.xml
+*.log
+
+# Generated dashboard site
+site/
+dist/
+build/
+*.egg-info/
+
+# IDE / OS
+.DS_Store
+.idea/
+.vscode/
+*.swp
+
