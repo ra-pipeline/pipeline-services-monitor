@@ -1,0 +1,175 @@
+name: Pipeline Online Services Monitor
+
+on:
+  schedule:
+    # Run every 6 hours (00:00, 06:00, 12:00, 18:00 UTC)
+    - cron: '0 */6 * * *'
+  workflow_dispatch:
+    inputs:
+      pytest_extra_args:
+        description: 'Extra pytest arguments (e.g. -k test_alma or -k test_vla)'
+        required: false
+        default: ''
+  pull_request:
+    paths:
+      - 'tests/**'
+      - 'src/**'
+      - '.github/workflows/monitor.yml'
+      - 'pyproject.toml'
+
+# Grant permissions required for native GitHub Pages deployment and data branch push
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
+# Allow only one concurrent deployment, skipping runs in-flight
+concurrency:
+  group: 'pages'
+  cancel-in-progress: false
+
+jobs:
+  monitor:
+    name: Check Online Services & Deploy Dashboard
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install .
+
+      - name: Restore history from data branch
+        run: |
+          mkdir -p site/data
+          # Fetch remote data branch if it exists
+          if git fetch origin data 2>/dev/null; then
+            echo "Restoring history.json from data branch..."
+            git show origin/data:history.json > site/data/history.json 2>/dev/null || echo "[]" > site/data/history.json
+          else
+            echo "Data branch does not exist yet. Initializing new history."
+            echo "[]" > site/data/history.json
+          fi
+          # Ensure valid JSON array
+          if [ ! -s site/data/history.json ] || ! python -c "import json; json.load(open('site/data/history.json'))" 2>/dev/null; then
+            echo "[]" > site/data/history.json
+          fi
+
+      - name: Run online services regression tests
+        if: always()
+        env:
+          FLUX_SERVICE_URL: ${{ vars.FLUX_SERVICE_URL || '' }}
+          FLUX_SERVICE_URL_BACKUP: ${{ vars.FLUX_SERVICE_URL_BACKUP || '' }}
+          ANTPOS_SERVICE_URL: ${{ vars.ANTPOS_SERVICE_URL || '' }}
+          JYPERKDB_URL: ${{ vars.JYPERKDB_URL || '' }}
+          VLA_BASELINES_URL: ${{ vars.VLA_BASELINES_URL || '' }}
+        run: |
+          mkdir -p site
+          python -m pytest tests/ \
+            -v \
+            --tb=short \
+            --junit-xml=test-results.xml \
+            --html=site/report.html \
+            --self-contained-html \
+            ${{ github.event.inputs.pytest_extra_args }}
+
+      - name: Generate status dashboard and update history
+        if: always()
+        run: python src/generate_dashboard.py
+
+      - name: Commit updated history to data branch
+        if: always() && github.event_name != 'pull_request'
+        run: |
+          TEMP_DIR=$(mktemp -d)
+          git clone --depth 1 --branch data "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git" "$TEMP_DIR" 2>/dev/null || {
+            mkdir -p "$TEMP_DIR"
+            cd "$TEMP_DIR"
+            git init -b data
+            git remote add origin "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git"
+          }
+          cd "$TEMP_DIR"
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          cp "${{ github.workspace }}/site/data/history.json" ./history.json
+          git add history.json
+          if ! git diff --cached --quiet; then
+            git commit -m "Update test history [skip ci]"
+            git push -u origin data
+          fi
+
+      - name: Setup Pages
+        if: always() && github.event_name != 'pull_request'
+        uses: actions/configure-pages@v5
+
+      - name: Upload Pages Artifact
+        if: always() && github.event_name != 'pull_request'
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: './site'
+
+      - name: Deploy to GitHub Pages
+        if: always() && github.event_name != 'pull_request'
+        id: deployment
+        uses: actions/deploy-pages@v4
+
+      - name: Write job summary
+        if: always()
+        run: |
+          python - <<'EOF'
+          import os
+          import xml.etree.ElementTree as ET
+
+          path = 'test-results.xml'
+          ghs = os.environ.get('GITHUB_STEP_SUMMARY', '')
+          out = open(ghs, 'a') if ghs else None
+
+          def write(line=''):
+              print(line)
+              if out:
+                  out.write(line + '\n')
+
+          if not os.path.exists(path):
+              write('Warning: No test-results.xml produced – pytest may have encountered a fatal error.')
+          else:
+              root = ET.parse(path).getroot()
+              suite = root if root.tag == 'testsuite' else root.find('testsuite')
+              tests = int(suite.get('tests', 0))
+              failures = int(suite.get('failures', 0))
+              errors = int(suite.get('errors', 0))
+              skipped = int(suite.get('skipped', 0))
+              passed = tests - failures - errors - skipped
+
+              status = 'All Passing' if (failures + errors) == 0 else 'Failures Detected'
+              write(f'## Pipeline Online Services – {status}')
+              write()
+              write('| Passed | Failed | Errors | Skipped | Total |')
+              write('|:------:|:------:|:------:|:-------:|:-----:|')
+              write(f'| {passed} | {failures} | {errors} | {skipped} | {tests} |')
+
+              if failures + errors > 0:
+                  write()
+                  write('### Failed Tests')
+                  write()
+                  for tc in suite.iter('testcase'):
+                      fail = tc.find('failure') or tc.find('error')
+                      if fail is not None:
+                          name = f"{tc.get('classname', '')}.{tc.get('name', '')}"
+                          msg = (fail.get('message') or '').splitlines()[0][:140]
+                          write(f'- `{name}` — {msg}')
+
+          if out:
+              out.close()
+          EOF

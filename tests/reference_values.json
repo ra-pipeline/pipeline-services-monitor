@@ -1,0 +1,117 @@
+{
+  "_comment": [
+    "Reference values for ALMA pipeline online service regression tests.",
+    "These are fixed historical queries whose results will never change.",
+    "To refresh: run  python tests/online_services/update_references.py",
+    "Last updated: 2026-07-30"
+  ],
+  "flux_service": {
+    "_status_codes": {
+      "0": "interpolated/extrapolated",
+      "1": "direct measurement"
+    },
+    "liveness_query": {
+      "source": "J1427-4206",
+      "date": "27-March-2013",
+      "frequency_hz": 86837309056.16922,
+      "expected_status_code": "1",
+      "flux_density_jy": 7.7245263249054075,
+      "flux_density_error_jy": 0.09139703262558804,
+      "spectral_index": -0.359656945792801,
+      "spectral_index_error": 0.0028458151053630384,
+      "data_conditions": "900",
+      "nearest_measurement_date_days": 27.0,
+      "tolerance_relative": 0.001
+    },
+    "real_query": {
+      "source": "J1957-3845",
+      "date": "14-August-2023",
+      "frequency_hz": 224000001907.34863,
+      "expected_status_code": "0",
+      "flux_density_jy": 1.3489849314991744,
+      "flux_density_error_jy": 0.0281541551005343,
+      "spectral_index": -0.6811991772825294,
+      "spectral_index_error": 0.028023074064962926,
+      "data_conditions": "511",
+      "nearest_measurement_date_days": -3.0,
+      "tolerance_relative": 0.001
+    }
+  },
+  "jyperk_service": {
+    "test_uid": "uid://A002/X85c183/X36f",
+    "expected_entry_count": 12,
+    "expected_antennas": [
+      "DA61",
+      "PM03",
+      "PM04"
+    ],
+    "factors_by_spwid": {
+      "17": 43.768,
+      "19": 43.776,
+      "21": 43.824,
+      "23": 43.834
+    },
+    "tolerance_relative": 0.001
+  },
+  "antpos_service": {
+    "test_uid": "uid://A002/Xc46ab2/X15ae",
+    "tolerance_metres": 0.001,
+    "itrf_positions": {
+      "CM01": [
+        2225080.3548740214,
+        -5440132.956157358,
+        -2481524.789523484
+      ],
+      "CM02": [
+        2225070.9577554185,
+        -5440127.670408771,
+        -2481544.6549976915
+      ],
+      "CM03": [
+        2225076.7343710433,
+        -5440122.931591074,
+        -2481549.824034388
+      ],
+      "CM04": [
+        2225074.0674169073,
+        -5440115.2485899925,
+        -2481568.9435991333
+      ],
+      "CM05": [
+        2225063.5458056196,
+        -5440128.204003837,
+        -2481550.0793935717
+      ],
+      "CM06": [
+        2225084.240344679,
+        -5440114.996998933,
+        -2481560.411523414
+      ],
+      "CM07": [
+        2225090.999347249,
+        -5440126.600030151,
+        -2481529.1337824278
+      ],
+      "CM08": [
+        2225063.532649026,
+        -5440134.133545727,
+        -2481537.201854615
+      ],
+      "CM09": [
+        2225072.154591203,
+        -5440136.29471753,
+        -2481524.791120835
+      ],
+      "CM11": [
+        2225065.4338380173,
+        -5440120.432512066,
+        -2481565.313278607
+      ],
+      "CM12": [
+        2225089.4378912775,
+        -5440119.772041418,
+        -2481545.3988588704
+      ]
+    }
+  }
+}

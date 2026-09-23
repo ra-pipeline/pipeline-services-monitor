@@ -1,0 +1,16 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "pipeline-services-monitor"
+version = "0.1.0"
+description = "Regression tests and health monitoring for online services used by the ALMA/VLA Pipeline"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = ["certifi>=2024.2.2", "pytest>=7.0.0", "pytest-html>=4.0.0"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+minversion = "7.0"
+addopts = "-v --tb=short"
