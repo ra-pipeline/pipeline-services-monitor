@@ -6,6 +6,11 @@ on:
     - cron: '0 */6 * * *'
   workflow_dispatch:
     inputs:
+      purge_history:
+        description: 'Reset history and start uptime from 100%'
+        type: boolean
+        required: false
+        default: false
       pytest_extra_args:
         description: 'Extra pytest arguments (e.g. -k test_alma or -k test_vla)'
         required: false
@@ -55,8 +60,10 @@ jobs:
       - name: Restore history from data branch
         run: |
           mkdir -p site/data
-          # Fetch remote data branch if it exists
-          if git fetch origin data 2>/dev/null; then
+          if [ "${{ github.event.inputs.purge_history }}" = "true" ]; then
+            echo "Purge requested: resetting history to clean state."
+            echo "[]" > site/data/history.json
+          elif git fetch origin data 2>/dev/null; then
             echo "Restoring history.json from data branch..."
             git show origin/data:history.json > site/data/history.json 2>/dev/null || echo "[]" > site/data/history.json
           else

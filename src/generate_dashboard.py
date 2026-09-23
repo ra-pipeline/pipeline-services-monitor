@@ -777,7 +777,7 @@ def generate_html(results: dict, history: list[dict], has_html_report: bool = Tr
     <header class="app-bar">
         <div class="app-bar-brand">
             Pipeline Online Services Monitor
-            <span class="subtitle">| Radio Astronomy Pipeline Services Status</span>
+            <span class="subtitle">| Status</span>
         </div>
         <div>
             {report_nav_link}
