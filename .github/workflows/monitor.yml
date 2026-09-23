@@ -70,12 +70,6 @@ jobs:
 
       - name: Run online services regression tests
         if: always()
-        env:
-          FLUX_SERVICE_URL: ${{ vars.FLUX_SERVICE_URL || '' }}
-          FLUX_SERVICE_URL_BACKUP: ${{ vars.FLUX_SERVICE_URL_BACKUP || '' }}
-          ANTPOS_SERVICE_URL: ${{ vars.ANTPOS_SERVICE_URL || '' }}
-          JYPERKDB_URL: ${{ vars.JYPERKDB_URL || '' }}
-          VLA_BASELINES_URL: ${{ vars.VLA_BASELINES_URL || '' }}
         run: |
           mkdir -p site
           python -m pytest tests/ \
@@ -164,7 +158,7 @@ jobs:
                   write('### Failed Tests')
                   write()
                   for tc in suite.iter('testcase'):
-                      fail = tc.find('failure') or tc.find('error')
+                      fail = tc.find('failure') if tc.find('failure') is not None else tc.find('error')
                       if fail is not None:
                           name = f"{tc.get('classname', '')}.{tc.get('name', '')}"
                           msg = (fail.get('message') or '').splitlines()[0][:140]

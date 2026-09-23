@@ -111,7 +111,7 @@ def parse_junit_results(junit_file: Path) -> dict:
             except ValueError:
                 duration = 0.0
 
-            fail = tc.find('failure') or tc.find('error')
+            fail = tc.find('failure') if tc.find('failure') is not None else tc.find('error')
             skip = tc.find('skipped')
 
             if fail is not None:

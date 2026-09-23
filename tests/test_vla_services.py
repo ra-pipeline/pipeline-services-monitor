@@ -19,12 +19,12 @@ import certifi
 import pytest
 
 # Base URL for VLA baseline corrections (allows overriding via env var)
-VLA_BASELINES_BASE_URL = os.environ.get('VLA_BASELINES_URL', 'http://www.vla.nrao.edu/cgi-bin/evlais_blines.cgi?Year=')
+VLA_BASELINES_BASE_URL = os.environ.get('VLA_BASELINES_URL') or 'http://www.vla.nrao.edu/cgi-bin/evlais_blines.cgi?Year='
 
 VLA_ARCHIVE_URL = 'http://www.vla.nrao.edu/astro/archive/baselines/'
 
-CASA_RUNDATA_URL = os.environ.get('CASA_RUNDATA_URL', 'https://go.nrao.edu/casarundata')
-CASA_IERS_URL = os.environ.get('CASA_IERS_URL', 'https://go.nrao.edu/iers/')
+CASA_RUNDATA_URL = os.environ.get('CASA_RUNDATA_URL') or 'https://go.nrao.edu/casarundata'
+CASA_IERS_URL = os.environ.get('CASA_IERS_URL') or 'https://go.nrao.edu/iers/'
 CDDIS_URL = 'https://cddis.nasa.gov'
 
 _SSL_CTX = ssl.create_default_context(cafile=certifi.where())
