@@ -1,62 +1,14 @@
 [
   {
-    "timestamp": "2026-09-23T23:18:49.440480+00:00",
-    "date_display": "2026-09-23 23:18 UTC",
-    "passed": 75,
-    "failed": 6,
-    "skipped": 0,
-    "total": 81,
-    "duration": 101.82,
-    "status": "failed",
-    "run_id": "35932791031",
-    "run_url": "https://github.com/ra-pipeline/pipeline-services-monitor/actions/runs/35932791031"
-  },
-  {
-    "timestamp": "2026-09-23T23:34:09.930078+00:00",
-    "date_display": "2026-09-23 23:34 UTC",
-    "passed": 81,
-    "failed": 0,
-    "skipped": 0,
-    "total": 81,
-    "duration": 108.84,
-    "status": "operational",
-    "run_id": "35934074076",
-    "run_url": "https://github.com/ra-pipeline/pipeline-services-monitor/actions/runs/35934074076"
-  },
-  {
-    "timestamp": "2026-09-23T23:39:10.703368+00:00",
-    "date_display": "2026-09-23 23:39 UTC",
-    "passed": 80,
+    "timestamp": "2026-09-23T23:58:04.365504+00:00",
+    "date_display": "2026-09-23 23:58 UTC",
+    "passed": 79,
     "failed": 1,
-    "skipped": 0,
+    "skipped": 1,
     "total": 81,
-    "duration": 105.19,
+    "duration": 146.64,
     "status": "failed",
-    "run_id": "35934074076",
-    "run_url": "https://github.com/ra-pipeline/pipeline-services-monitor/actions/runs/35934074076"
-  },
-  {
-    "timestamp": "2026-09-23T23:42:36.287128+00:00",
-    "date_display": "2026-09-23 23:42 UTC",
-    "passed": 81,
-    "failed": 0,
-    "skipped": 0,
-    "total": 81,
-    "duration": 109.73,
-    "status": "operational",
-    "run_id": "35934074076",
-    "run_url": "https://github.com/ra-pipeline/pipeline-services-monitor/actions/runs/35934074076"
-  },
-  {
-    "timestamp": "2026-09-23T23:44:45.461144+00:00",
-    "date_display": "2026-09-23 23:44 UTC",
-    "passed": 81,
-    "failed": 0,
-    "skipped": 0,
-    "total": 81,
-    "duration": 105.22,
-    "status": "operational",
-    "run_id": "35934913028",
-    "run_url": "https://github.com/ra-pipeline/pipeline-services-monitor/actions/runs/35934913028"
+    "run_id": "35935951073",
+    "run_url": "https://github.com/ra-pipeline/pipeline-services-monitor/actions/runs/35935951073"
   }
 ]
