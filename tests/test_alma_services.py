@@ -223,6 +223,10 @@ class TestFluxService:
         Checks: StatusCode, FluxDensity, FluxDensityError, SpectralIndex,
                 SpectralIndexError, DataConditions, NearestMeasurementDate.
         Tolerances: 0.1% for flux/spectral measurements (historical), 1% for error estimates.
+
+        Note: Validates the standard candle ping (J1427-4206, Band 3) used by
+        almaimportdata to verify service health before science runs. Expects a
+        direct catalog measurement (StatusCode 1).
         """
         result = _query_flux_service(base_url, FLUX_LIVENESS_PARAMS)
         base_tol = ref['tolerance_relative']
@@ -260,6 +264,9 @@ class TestFluxService:
         """Real query on primary endpoint returns reference values within tolerance.
 
         Tolerances: 0.1% for flux/spectral measurements (historical), 1% for error estimates.
+
+        Note: Validates an actual production science query (J1957-3845, Band 6)
+        requiring server-side temporal interpolation and extrapolation (StatusCode 0).
         """
         result = _query_flux_service(base_url, FLUX_REAL_PARAMS)
         base_tol = ref['tolerance_relative']
