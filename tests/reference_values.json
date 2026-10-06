@@ -19,7 +19,7 @@
       "flux_density_error_jy": 0.09139703262558804,
       "spectral_index": -0.359656945792801,
       "spectral_index_error": 0.0028458151053630384,
-      "data_conditions": "900",
+      "data_conditions": "9001",
       "nearest_measurement_date_days": 27.0,
       "tolerance_relative": 0.001
     },
@@ -32,7 +32,7 @@
       "flux_density_error_jy": 0.0281541551005343,
       "spectral_index": -0.6811991772825294,
       "spectral_index_error": 0.028023074064962926,
-      "data_conditions": "511",
+      "data_conditions": "5111",
       "nearest_measurement_date_days": -3.0,
       "tolerance_relative": 0.001
     }
