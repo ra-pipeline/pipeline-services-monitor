@@ -77,16 +77,24 @@ def _get(url: str, timeout: float = 60.0) -> bytes:
 
 
 def _get_skip_on_server_error(label: str, url: str, timeout: float = 60.0) -> bytes:
-    """Fetch URL, skipping the test if the server returns 5xx error (unavailable/maintenance).
+    """Fetch URL, skipping test if endpoint is temporarily unavailable.
 
-    This reduces noise when regional mirrors are temporarily down for maintenance.
-    Other errors (4xx, connection refused, timeouts) still fail the test normally.
+    This reduces noise when regional mirrors are temporarily down for maintenance
+    or temporarily block requests from specific networks/agents.
+
+    Current policy:
+    - Skip on 5xx (service unavailable/maintenance)
+    - Skip on JAO 403 only (JAO from outside IP ranges may be a stable long-term
+      endpoint-specific access policy state)
+    - Re-raise all other errors
     """
     try:
         return _get(url, timeout=timeout)
     except urllib.error.HTTPError as exc:
         if exc.code >= 500:
             pytest.skip(f'{label}: endpoint unavailable ({exc.code} server error)')
+        if exc.code == 403 and label.startswith('JAO'):
+            pytest.skip(f'{label}: endpoint denied access ({exc.code}); usually endpoint-specific access policy')
         raise
 
 
@@ -347,8 +355,9 @@ class TestJyPerKService:
         """At least one JyPerK endpoint is reachable (fails if all endpoints are down).
 
         This test catches permanent outages (e.g., DNS failure, network partition)
-        and alerts that a mirror endpoint is dead. Transient 5xx errors are caught
-        by individual endpoint tests which skip on 5xx.
+        and alerts that a mirror endpoint is dead. Transient 5xx errors are
+        tolerated, and JAO 403 is tolerated as a known external access-policy
+        behavior for non-JAO networks.
         """
         down_endpoints: dict[str, str] = {}
         for label, base_url in JYPERK_ENDPOINTS.items():
@@ -361,6 +370,10 @@ class TestJyPerKService:
             except urllib.error.HTTPError as e:
                 if e.code >= 500:
                     down_endpoints[label] = f'HTTP {e.code}'
+                elif e.code == 403 and label.startswith('JAO'):
+                    # Endpoint is up but denies this origin; for JAO from outside
+                    # IP ranges this can be a stable policy state.
+                    down_endpoints[label] = f'HTTP {e.code} (access denied)'
                 else:
                     # 4xx errors (e.g., 404) are more serious – client error
                     pytest.fail(f'{label}: client error {e.code} from {url}')
