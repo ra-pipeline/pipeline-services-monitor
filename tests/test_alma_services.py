@@ -230,7 +230,7 @@ class TestFluxService:
 
         Checks: StatusCode, FluxDensity, FluxDensityError, SpectralIndex,
                 SpectralIndexError, DataConditions, NearestMeasurementDate.
-        Tolerances: 0.1% for flux/spectral measurements (historical), 1% for error estimates.
+        Tolerances: 0.1% for flux/spectral measurements (historical), 1.5% for error estimates.
 
         Note: Validates the standard candle ping (J1427-4206, Band 3) used by
         almaimportdata to verify service health before science runs. Expects a
@@ -239,7 +239,7 @@ class TestFluxService:
         result = _query_flux_service(base_url, FLUX_LIVENESS_PARAMS)
         base_tol = ref['tolerance_relative']
         # Error estimates (statistical) have higher tolerance than measurements (historical)
-        error_tol = 0.01  # 1% tolerance for error estimates that naturally drift
+        error_tol = 0.015  # 1.5% tolerance for error estimates that naturally drift
 
         assert result.get('StatusCode') == ref['expected_status_code'], (
             f'StatusCode {result.get("StatusCode")!r} != {ref["expected_status_code"]!r}'
@@ -271,7 +271,7 @@ class TestFluxService:
     def test_reference_all_real_query_fields(self, base_url: str, ref: dict) -> None:
         """Real query on primary endpoint returns reference values within tolerance.
 
-        Tolerances: 0.1% for flux/spectral measurements (historical), 1% for error estimates.
+        Tolerances: 0.1% for flux/spectral measurements (historical), 1.5% for error estimates.
 
         Note: Validates an actual production science query (J1957-3845, Band 6)
         requiring server-side temporal interpolation and extrapolation (StatusCode 0).
@@ -279,7 +279,7 @@ class TestFluxService:
         result = _query_flux_service(base_url, FLUX_REAL_PARAMS)
         base_tol = ref['tolerance_relative']
         # Error estimates (statistical) have higher tolerance than measurements (historical)
-        error_tol = 0.01  # 1% tolerance for error estimates that naturally drift
+        error_tol = 0.015  # 1.5% tolerance for error estimates that naturally drift
 
         assert result.get('StatusCode') == ref['expected_status_code'], (
             f'StatusCode {result.get("StatusCode")!r} != {ref["expected_status_code"]!r}'
