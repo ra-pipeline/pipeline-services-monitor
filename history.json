@@ -2098,5 +2098,17 @@
     "status": "failed",
     "run_id": "43559155112",
     "run_url": "https://github.com/ra-pipeline/pipeline-services-monitor/actions/runs/43559155112"
+  },
+  {
+    "timestamp": "2026-11-14T13:13:12.823599+00:00",
+    "date_display": "2026-11-14 13:13 UTC",
+    "passed": 66,
+    "failed": 10,
+    "skipped": 5,
+    "total": 81,
+    "duration": 891.2,
+    "status": "failed",
+    "run_id": "43597370474",
+    "run_url": "https://github.com/ra-pipeline/pipeline-services-monitor/actions/runs/43597370474"
   }
 ]
