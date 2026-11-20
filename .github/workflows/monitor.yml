@@ -35,12 +35,9 @@ concurrency:
 
 jobs:
   monitor:
-    name: Check Online Services & Deploy Dashboard
+    name: Check Online Services
     runs-on: ubuntu-latest
     timeout-minutes: 30
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
 
     steps:
       - name: Check out repository
@@ -121,11 +118,6 @@ jobs:
         with:
           path: './site'
 
-      - name: Deploy to GitHub Pages
-        if: always() && github.event_name != 'pull_request'
-        id: deployment
-        uses: actions/deploy-pages@v5
-
       - name: Write job summary
         if: always()
         run: |
@@ -174,3 +166,16 @@ jobs:
           if out:
               out.close()
           EOF
+
+  deploy:
+    name: Deploy to GitHub Pages
+    needs: monitor
+    if: always() && github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v5
