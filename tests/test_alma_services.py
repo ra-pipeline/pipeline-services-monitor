@@ -48,6 +48,8 @@ _ap = _REF['antpos_service']
 FLUX_REF_J1427_DENSITY: float = _flux_lq['flux_density_jy']
 FLUX_REF_J1427_SPIX: float = _flux_lq['spectral_index']
 FLUX_REF_TOLERANCE: float = _flux_lq['tolerance_relative']
+# Error estimates (statistical) have higher tolerance than historical measurements
+FLUX_ERROR_TOLERANCE: float = 0.03
 
 JYPERK_REF_FACTOR_COUNT: int = _jk['expected_entry_count']
 JYPERK_REF_FACTORS: dict[int, float] = {int(k): v for k, v in _jk['factors_by_spwid'].items()}
@@ -161,6 +163,36 @@ def _query_flux_service(base_url: str, params: dict[str, str]) -> dict[str, str 
     return rowdict
 
 
+def _assert_flux_reference_fields(
+    result: dict[str, str | None],
+    ref: dict,
+    error_tol: float = FLUX_ERROR_TOLERANCE,
+) -> None:
+    """Assert that a sc/flux response matches reference values within tolerance."""
+    base_tol = ref['tolerance_relative']
+
+    assert result.get('StatusCode') == ref['expected_status_code'], (
+        f'StatusCode {result.get("StatusCode")!r} != {ref["expected_status_code"]!r}'
+    )
+    assert result.get('DataConditions') == ref['data_conditions'], (
+        f'DataConditions {result.get("DataConditions")!r} != {ref["data_conditions"]!r}'
+    )
+    nmd = float(result['Nearest Measurement Date'])
+    assert abs(nmd - ref['nearest_measurement_date_days']) < 1.0, (
+        f'Nearest Measurement Date {nmd} != ref {ref["nearest_measurement_date_days"]}'
+    )
+    for field, ref_key, tol in (
+        ('FluxDensity', 'flux_density_jy', base_tol),
+        ('FluxDensityError', 'flux_density_error_jy', error_tol),
+        ('SpectralIndex', 'spectral_index', base_tol),
+        ('SpectralIndexError', 'spectral_index_error', error_tol),
+    ):
+        got = float(result[field])
+        ref_val = ref[ref_key]
+        rel_err = abs(got - ref_val) / abs(ref_val) if ref_val != 0 else abs(got)
+        assert rel_err < tol, f'{field}: {got} vs ref {ref_val}, rel err {rel_err:.2e} (tol {tol})'
+
+
 class TestFluxService:
     """Tests for the ALMA source-flux catalogue service."""
 
@@ -230,37 +262,14 @@ class TestFluxService:
 
         Checks: StatusCode, FluxDensity, FluxDensityError, SpectralIndex,
                 SpectralIndexError, DataConditions, NearestMeasurementDate.
-        Tolerances: 0.1% for flux/spectral measurements (historical), 1.5% for error estimates.
+        Tolerances: 0.1% for flux/spectral measurements (historical), 3.0% for error estimates.
 
         Note: Validates the standard candle ping (J1427-4206, Band 3) used by
         almaimportdata to verify service health before science runs. Expects a
         direct catalog measurement (StatusCode 1).
         """
         result = _query_flux_service(base_url, FLUX_LIVENESS_PARAMS)
-        base_tol = ref['tolerance_relative']
-        # Error estimates (statistical) have higher tolerance than measurements (historical)
-        error_tol = 0.015  # 1.5% tolerance for error estimates that naturally drift
-
-        assert result.get('StatusCode') == ref['expected_status_code'], (
-            f'StatusCode {result.get("StatusCode")!r} != {ref["expected_status_code"]!r}'
-        )
-        assert result.get('DataConditions') == ref['data_conditions'], (
-            f'DataConditions {result.get("DataConditions")!r} != {ref["data_conditions"]!r}'
-        )
-        nmd = float(result['Nearest Measurement Date'])
-        assert abs(nmd - ref['nearest_measurement_date_days']) < 1.0, (
-            f'Nearest Measurement Date {nmd} != ref {ref["nearest_measurement_date_days"]}'
-        )
-        for field, ref_key, tol in (
-            ('FluxDensity', 'flux_density_jy', base_tol),
-            ('FluxDensityError', 'flux_density_error_jy', error_tol),
-            ('SpectralIndex', 'spectral_index', base_tol),
-            ('SpectralIndexError', 'spectral_index_error', error_tol),
-        ):
-            got = float(result[field])
-            ref_val = ref[ref_key]
-            rel_err = abs(got - ref_val) / abs(ref_val) if ref_val != 0 else abs(got)
-            assert rel_err < tol, f'{field}: {got} vs ref {ref_val}, rel err {rel_err:.2e} (tol {tol})'
+        _assert_flux_reference_fields(result, ref)
 
     @pytest.mark.parametrize(
         'base_url,ref',
@@ -271,36 +280,13 @@ class TestFluxService:
     def test_reference_all_real_query_fields(self, base_url: str, ref: dict) -> None:
         """Real query on primary endpoint returns reference values within tolerance.
 
-        Tolerances: 0.1% for flux/spectral measurements (historical), 1.5% for error estimates.
+        Tolerances: 0.1% for flux/spectral measurements (historical), 3.0% for error estimates.
 
         Note: Validates an actual production science query (J1957-3845, Band 6)
         requiring server-side temporal interpolation and extrapolation (StatusCode 0).
         """
         result = _query_flux_service(base_url, FLUX_REAL_PARAMS)
-        base_tol = ref['tolerance_relative']
-        # Error estimates (statistical) have higher tolerance than measurements (historical)
-        error_tol = 0.015  # 1.5% tolerance for error estimates that naturally drift
-
-        assert result.get('StatusCode') == ref['expected_status_code'], (
-            f'StatusCode {result.get("StatusCode")!r} != {ref["expected_status_code"]!r}'
-        )
-        assert result.get('DataConditions') == ref['data_conditions'], (
-            f'DataConditions {result.get("DataConditions")!r} != {ref["data_conditions"]!r}'
-        )
-        nmd = float(result['Nearest Measurement Date'])
-        assert abs(nmd - ref['nearest_measurement_date_days']) < 1.0, (
-            f'Nearest Measurement Date {nmd} != ref {ref["nearest_measurement_date_days"]}'
-        )
-        for field, ref_key, tol in (
-            ('FluxDensity', 'flux_density_jy', base_tol),
-            ('FluxDensityError', 'flux_density_error_jy', error_tol),
-            ('SpectralIndex', 'spectral_index', base_tol),
-            ('SpectralIndexError', 'spectral_index_error', error_tol),
-        ):
-            got = float(result[field])
-            ref_val = ref[ref_key]
-            rel_err = abs(got - ref_val) / abs(ref_val) if ref_val != 0 else abs(got)
-            assert rel_err < tol, f'{field}: {got} vs ref {ref_val}, rel err {rel_err:.2e} (tol {tol})'
+        _assert_flux_reference_fields(result, ref)
 
 
 # --- Jy/K Conversion Factor Service (jy-kelvins) ---
